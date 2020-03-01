@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { MoviesService } from '../../services/movies.service';
+import { GetPopularMovies } from '../../state/movies.actions';
+import { MoviesStore } from '../../state/movies.store';
 
 @Component({
   selector: 'app-movies-root',
@@ -7,13 +8,15 @@ import { MoviesService } from '../../services/movies.service';
   styleUrls: ['./movies-root.component.scss']
 })
 export class MoviesRootComponent implements OnInit {
+  movies$ = this.store.movies$;
 
   constructor(
-    private moviesService: MoviesService
-  ) { }
+    private store: MoviesStore
+  ) {
+  }
 
   ngOnInit(): void {
-    this.moviesService.getPopularMovies();
+    this.store.dispatch(new GetPopularMovies());
   }
 
 }

@@ -1,8 +1,7 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 import { MoviesRootComponent } from './components/movies-root/movies-root.component';
 import { MoviesRoutingModule } from './movies-routing.module';
-
 
 
 @NgModule({
@@ -12,4 +11,5 @@ import { MoviesRoutingModule } from './movies-routing.module';
     MoviesRoutingModule
   ]
 })
-export class MoviesModule { }
+export class MoviesModule {
+}
