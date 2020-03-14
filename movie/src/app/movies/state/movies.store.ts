@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, OnInit } from '@angular/core';
 import { Action, DeepReadonly, ofType, selectState } from '@shared/state/helpers';
 import { BehaviorSubject, merge, Observable, Subject } from 'rxjs';
 import { exhaustMap, map, publishReplay, refCount, scan, startWith, takeUntil, tap } from 'rxjs/operators';
@@ -29,15 +29,17 @@ function SomeDecorator(config: any): ClassDecorator {
       'ngOnDestroy'
     ];
     const component = constructor.name;
-    const ngOnDestroy = constructor.prototype['ngOnDestroy'];
-    LIFECYCLE_HOOKS.forEach(hook => {
-      const original = constructor.prototype[hook];
-
-      constructor.prototype[hook] = function (...args) {
-        console.log(`%c ${component} - ${hook}`, `color: #4CAF50; font-weight: bold`, ...args);
-        original && original.apply(this, args);
-      };
-    });
+    constructor.prototype['ngOnDestroy'] = function(...args) {
+      debugger
+    };
+    // LIFECYCLE_HOOKS.forEach(hook => {
+    //   const original = constructor.prototype[hook];
+    //
+    //   constructor.prototype[hook] = function (...args) {
+    //     console.log(`%c ${component} - ${hook}`, `color: #4CAF50; font-weight: bold`, ...args);
+    //     original && original.apply(this, args);
+    //   };
+    // });
   };
 }
 
