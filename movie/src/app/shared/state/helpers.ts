@@ -1,4 +1,4 @@
-import { MonoTypeOperatorFunction, OperatorFunction } from 'rxjs';
+import { MonoTypeOperatorFunction, Observable, OperatorFunction } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
 export function ofType<T extends Action>(type: string): MonoTypeOperatorFunction<T> {
@@ -20,7 +20,7 @@ export function hasEditedObjectValue(previous: unknown, current: unknown) {
   }
 }
 // TODO lekaving: DeepReadonly<S> incoming coz properties define like DeepReadonly.
-export function selectState<S>(stateName: string): OperatorFunction<DeepReadonly<S>, S> {
+export function selectState<T, R>(stateName: string): OperatorFunction<DeepReadonly<T>, R> {
   return input$ => input$.pipe(
     map(state => state[stateName]),
     filter(state => state !== null),

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { MovieModel, Paging } from '../models/movie.model';
+import { MovieModel, Paging, some } from '../models/movie.model';
 import { MoviesApi } from './movies.api';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class MoviesService {
   ) {
   }
 
-  getPopularMovies(): Observable<Paging<MovieModel>> {
-    return this.http.get<Paging<MovieModel>>(this.urls.popularMovies());
+  getPopularMovies(): Observable<Paging<some>> {
+    return this.http.get<Paging<some>>(this.urls.popularMovies());
   }
 }
