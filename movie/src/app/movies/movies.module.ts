@@ -12,4 +12,8 @@ import { MoviesRoutingModule } from './movies-routing.module';
   ]
 })
 export class MoviesModule {
+
+  constructor() {
+  }
+
 }

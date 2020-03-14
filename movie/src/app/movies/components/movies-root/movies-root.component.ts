@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
+import { MovieModel } from '../../models/movie.model';
 import { GetPopularMovies } from '../../state/movies.actions';
 import { MoviesStore } from '../../state/movies.store';
 
@@ -8,7 +10,7 @@ import { MoviesStore } from '../../state/movies.store';
   styleUrls: ['./movies-root.component.scss']
 })
 export class MoviesRootComponent implements OnInit {
-  movies$ = this.store.movies$;
+  movies$: Observable<MovieModel[]> = this.store.movies$;
 
   constructor(
     private store: MoviesStore
