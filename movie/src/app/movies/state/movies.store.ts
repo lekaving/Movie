@@ -18,9 +18,33 @@ const defaultState: ReadOnlyMoviesState = {
   loading: false
 };
 
+function SomeDecorator(config: any): ClassDecorator {
+  console.log('-- decorator function invoked --');
+  // tslint:disable-next-line:only-arrow-functions
+  return function(constructor: any) {
+    console.log('-- decorator invoked --');
+    const LIFECYCLE_HOOKS = [
+      'ngOnInit',
+      'ngOnChanges',
+      'ngOnDestroy'
+    ];
+    const component = constructor.name;
+    const ngOnDestroy = constructor.prototype['ngOnDestroy'];
+    LIFECYCLE_HOOKS.forEach(hook => {
+      const original = constructor.prototype[hook];
+
+      constructor.prototype[hook] = function (...args) {
+        console.log(`%c ${component} - ${hook}`, `color: #4CAF50; font-weight: bold`, ...args);
+        original && original.apply(this, args);
+      };
+    });
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
+@SomeDecorator({})
 export class MoviesStore implements OnDestroy {
   state$: BehaviorSubject<ReadOnlyMoviesState> = new BehaviorSubject<ReadOnlyMoviesState>(defaultState);
   actions$: Subject<Action> = new Subject<Action>();
@@ -46,6 +70,7 @@ export class MoviesStore implements OnDestroy {
 
   stateObs$: Observable<ReadOnlyMoviesState> =
     this.dispatcher$.pipe(
+      takeUntil(this.destroy$),
       startWith(defaultState),
       scan(reducer),
       publishReplay(1),
@@ -57,7 +82,9 @@ export class MoviesStore implements OnDestroy {
       }),
     );
 
-  movies$ = this.state$.pipe(selectState('items'));
+  movies$: Observable<MovieModel[]> = this.state$.pipe(selectState('items'));
+
+  // movies: MovieModel[] = this.state$.getValue().items;
 
   initialStorage() {
     this.stateObs$.pipe(takeUntil(this.destroy$)).subscribe(data => this.state$.next(data));
@@ -68,10 +95,10 @@ export class MoviesStore implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.actions$.next();
     this.actions$.complete();
     this.state$.complete();
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

@@ -1,3 +1,25 @@
+import * as t from 'runtypes';
+
+const some = t.Record({
+  poster_path: t.String,
+  adult: t.Boolean,
+  overview: t.String,
+  release_date: t.String,
+  genre_ids: t.Array(t.Number),
+  id: t.Number,
+  original_title: t.String,
+  original_language: t.String,
+  title: t.Boolean,
+  backdrop_path: t.String,
+  popularity: t.Number,
+  vote_count: t.Number,
+  video: t.Boolean,
+  vote_average: t.Number,
+});
+
+export type some = t.Static<typeof some>;
+
+
 export interface MovieModel {
   poster_path: string;
   adult: boolean;
