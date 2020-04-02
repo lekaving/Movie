@@ -4,7 +4,7 @@ import { BehaviorSubject, merge, Observable, Subject } from 'rxjs';
 import { exhaustMap, map, publishReplay, refCount, scan, startWith, takeUntil, tap } from 'rxjs/operators';
 import { MovieModel } from '../models/movie.model';
 import { MoviesService } from '../services/movies.service';
-import { GetPopularMoviesSuccess, MoviesActionEnum } from './movies.actions';
+import { GetPopularMovies, GetPopularMoviesSuccess, MoviesActionEnum } from './movies.actions';
 import { reducer } from './movies.reducer';
 
 export interface MoviesState {
@@ -18,81 +18,83 @@ const defaultState: ReadOnlyMoviesState = {
   loading: false
 };
 
+function Action(some: any) {
+  return function (target, propertyKey, descriptor) {
+    const actions = target.actions$;
+    target.constructor.prototype.decoratorActions = {action: some, propertyKey};
+  };
+}
 
-function SomeDecorator(config: any): ClassDecorator {
-  console.log('-- decorator function invoked --');
-  // tslint:disable-next-line:only-arrow-functions
-  return function(constructor: any) {
-    console.log('-- decorator invoked --');
-    const LIFECYCLE_HOOKS = [
-      'ngOnInit',
-      'ngOnChanges',
-      'ngOnDestroy'
-    ];
-    const component = constructor.name;
-    const ngOnDestroy = constructor.prototype['ngOnDestroy'];
-    LIFECYCLE_HOOKS.forEach(hook => {
-      const original = constructor.prototype[hook];
+function Store(config: any) {
+  return function _Store<T extends { new(...args: any[]): {} }>(constructor: T) {
+    return class extends constructor implements OnDestroy {
 
-      constructor.prototype[hook] = function (...args) {
-        console.log(`%c ${component} - ${hook}`, `color: #4CAF50; font-weight: bold`, ...args);
-        original && original.apply(this, args);
-      };
-    });
+      private destroy$ = new Subject<void>();
+
+      constructor(...args: any[]) {
+        super(...args);
+        debugger
+        this.stateObs$.pipe(takeUntil(this.destroy$)).subscribe(data => {
+          debugger
+          return this.state$.next(data);
+        });
+      }
+      actions$: Subject<Action> = new Subject<Action>();
+
+      dispatcher$: Observable<Action>;
+
+      stateObs$: Observable<ReadOnlyMoviesState> =
+        this.dispatcher$.pipe(
+          // takeUntil(this.destroy$),
+          startWith(defaultState),
+          scan(reducer),
+          publishReplay(1),
+          refCount(),
+        );
+
+      dispatch(action: Action): void {
+        debugger
+        if (this.decoratorActions.action.name === action.type) {
+          this.dispatcher$ = merge(
+            this.actions$,
+            this[this.decoratorActions.propertyKey](this.actions$)
+          );
+        }
+        this.actions$.next(action);
+      }
+
+      ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+      }
+    };
   };
 }
 
 @Injectable()
-@SomeDecorator({})
-export class MoviesStore implements OnDestroy {
+@Store({
+  state: new BehaviorSubject<ReadOnlyMoviesState>(defaultState)
+})
+export class MoviesStore {
   state$: BehaviorSubject<ReadOnlyMoviesState> = new BehaviorSubject<ReadOnlyMoviesState>(defaultState);
-  actions$: Subject<Action> = new Subject<Action>();
-  private destroy$ = new Subject<void>();
 
   constructor(
     private moviesService: MoviesService
   ) {
-    this.initialStorage();
   }
 
-  private getPopularMovies$: Observable<Action> =
-    this.actions$.pipe(
+  @Action(GetPopularMovies)
+  getPopularMovies(action) {
+    return action.pipe(
+      tap(() => {
+        debugger
+      }),
       ofType(MoviesActionEnum.GetPopularMovies),
       exhaustMap(() => this.moviesService.getPopularMovies()),
       map((payload) => new GetPopularMoviesSuccess(payload.results))
     );
-
-  private dispatcher$: Observable<Action> = merge(
-    this.actions$,
-    this.getPopularMovies$
-  );
-
-  stateObs$: Observable<ReadOnlyMoviesState> =
-    this.dispatcher$.pipe(
-      takeUntil(this.destroy$),
-      startWith(defaultState),
-      scan(reducer),
-      publishReplay(1),
-      refCount(),
-    );
+  }
 
   movies$: Observable<MovieModel[]> = this.state$.pipe(selectState('items'));
 
-  // movies: MovieModel[] = this.state$.getValue().items;
-
-  initialStorage() {
-    this.stateObs$.pipe(takeUntil(this.destroy$)).subscribe(data => this.state$.next(data));
-  }
-
-  dispatch(action: Action): void {
-    this.actions$.next(action);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.actions$.next();
-    this.actions$.complete();
-    this.state$.complete();
-  }
 }

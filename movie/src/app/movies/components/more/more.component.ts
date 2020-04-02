@@ -14,7 +14,7 @@ export class MoreComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.store.dispatch(new GetPopularMovies());
+    // this.store.dispatch(new GetPopularMovies());
   }
 
 }
